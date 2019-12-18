@@ -1,0 +1,73 @@
+#!/bin/bash
+
+## Config
+
+# A few basic items to configure here, before you run it.
+
+# The full path to your Terminus command
+# Example: TERMINUS_PATH="/Users/example_user/vendor/pantheon-systems/terminus"
+TERMINUS_PATH=""
+
+# This is an array of Org machine names, separated by spaces.
+# Example: KEEP_ORGS=(org-example-1 org-example-2 pantheon-learning)
+KEEP_ORGS=()
+
+# This is an array of Site machine names, separated by spaces.
+# Example: KEEP_SITES=(site-example-1 site-example-2 test-site)
+KEEP_SITES=()
+
+
+# Helper function that checks if a string is in an array.
+function contains() {
+    local n=$#
+    local value=${!n}
+    for ((i=1;i < $#;i++)) {
+        if [ "${!i}" == "${value}" ]; then
+            echo "y"
+            return 0
+        fi
+    }
+    echo "n"
+    return 1
+}
+
+echo 'Time to clean up all these Orgs and Sites!'
+
+# Get the current Terminus user name.
+USER_ID=$($TERMINUS_PATH auth:whoami)
+echo User: $USER_ID
+
+# Get all the Orgs associated with the user.
+orgs_list=()
+while IFS= read -r line; do
+    orgs_list+=( "$line" )
+done < <(($TERMINUS_PATH org:list --field=name))
+
+# Loop through the Orgs. If not in the KEEP_ORGS, then remove the Org from user.
+for org in ${orgs_list[@]}
+do
+  if [[ $(contains "${KEEP_ORGS[@]}" "$org") == "n" ]]
+  then
+    $TERMINUS_PATH org:ppl:remove $org $USER_ID
+    echo Removed Org: $org
+  fi
+done
+
+# TODO: Remove sites you are a team member of but not in a list as well
+
+# Get all the Sites the user is a team member of..
+sites_list=()
+while IFS= read -r line; do
+    sites_list+=( "$line" )
+done < <(($TERMINUS_PATH site:list --team --field=name))
+
+# Loop through the Sites. If not in the KEEP_SITES, then remove the Site from user.
+for site in ${sites_list[@]}
+do
+  if [[ $(contains "${KEEP_SITES[@]}" "$site") == "n" ]]
+  then
+    $TERMINUS_PATH site:team:remove $site $USER_ID
+    echo Removed Site: $site
+  fi
+done
+
