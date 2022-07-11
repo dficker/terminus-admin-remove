@@ -4,9 +4,14 @@
 
 # A few basic items to configure here, before you run it.
 
+if ! [ -x "$(command -v terminus)" ]; then
+    echo 'Error: The terminus command was not found. Please install it yourself and try again. https://pantheon.io/docs/terminus/install' >&2
+	exit 1
+fi
+
 # The full path to your Terminus command
-# Example: TERMINUS_PATH="/Users/example_user/vendor/pantheon-systems/terminus"
-TERMINUS_PATH=""
+TERMINUS_PATH=$(command -v terminus)
+
 
 # This is an array of Org machine names, separated by spaces.
 # Example: KEEP_ORGS=(org-example-1 org-example-2 pantheon-learning)
